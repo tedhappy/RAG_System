@@ -1,103 +1,166 @@
-# RAG Challenge Winner Solution
+# RAG_System - 企业智能知识库
 
-**Read more about this project:**
-- Russian: https://habr.com/ru/articles/893356/
-- English: https://abdullin.com/ilya/how-to-build-best-rag/
+![Streamlit App](https://img.shields.io/badge/Streamlit-1.35.0-red.svg?style=flat-square&logo=streamlit)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square&logo=python)
 
-This repository contains the winning solution for both prize nominations in the RAG Challenge competition. The system achieved state-of-the-art results in answering questions about company annual reports using a combination of:
+本项目是一个基于 **检索增强生成 (Retrieval-Augmented Generation, RAG)** 的企业级智能知识库问答系统。它能够高效地处理本地PDF格式的文档（如金融研报、法律文书、技术手册等），将其转化为可检索的知识库，并利用大型语言模型（LLM）提供精准、忠于原文的问答体验。
 
-- Custom PDF parsing with Docling
-- Vector search with parent document retrieval
-- LLM reranking for improved context relevance
-- Structured output prompting with chain-of-thought reasoning
-- Query routing for multi-company comparisons
+## ✨ 项目亮点
 
-## Disclaimer
+- **端到端解决方案**: 提供从PDF文档解析、数据处理、向量化到Web界面问答的完整流程。
+- **本地化处理**: 所有文档解析和数据处理均在本地完成，不依赖外部付费解析服务，保证数据私密性。
+- **先进的RAG架构**: 结合了高效的向量检索与强大的LLM（如通义千问），确保回答既相关又准确。
+- **友好的用户界面**: 基于Streamlit构建了简洁美观、易于操作的Web界面，支持预设问题和实时问答。
+- **高可扩展性**: 代码结构清晰，模块化设计，方便替换或扩展数据处理、模型等组件。
 
-This is competition code - it's scrappy but it works. Some notes before you dive in:
+## 🏛️ 技术架构
 
-- IBM Watson integration won't work (it was competition-specific)
-- The code might have rough edges and weird workarounds
-- No tests, minimal error handling - you've been warned
-- You'll need your own API keys for OpenAI/Gemini
-- GPU helps a lot with PDF parsing (I used 4090)
+系统的工作流程主要分为数据准备、数据处理、RAG问答和前端界面四个阶段，如下图所示：
 
-If you're looking for production-ready code, this isn't it. But if you want to explore different RAG techniques and their implementations - check it out!
+```mermaid
+graph TD
+    subgraph "数据准备"
+        A[原始PDF研报] --> B(PyMuPDF解析);
+    end
 
-## Quick Start
+    subgraph "数据处理流水线"
+        B --> C(文本分块);
+        C --> D(文本向量化);
+        D --> E[Faiss向量数据库];
+    end
+    
+    subgraph "RAG问答流程"
+        F[用户问题] --> G{向量检索};
+        E --> G;
+        G --> H(LLM重排序);
+        H --> I{LLM生成答案};
+        I --> J[最终答案];
+    end
 
-Clone and setup:
-```bash
-git clone https://github.com/IlyaRice/RAG-Challenge-2.git
-cd RAG-Challenge-2
-python -m venv venv
-venv\Scripts\Activate.ps1  # Windows (PowerShell)
-pip install -e . -r requirements.txt
+    subgraph "前端界面"
+       K[Streamlit UI]
+       K -- 提问 --> F;
+       J -- 回答 --> K;
+    end
+    
+    style E fill:#f9f,stroke:#333,stroke-width:2px
+    style K fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
-Rename `env` to `.env` and add your API keys.
+## 🚀 快速开始
 
-## Test Dataset
+请按照以下步骤在您的本地环境中部署和运行本项目。
 
-The repository includes two datasets:
+### 1. 环境准备
 
-1. A small test set (in `data/test_set/`) with 5 annual reports and questions
-2. The full ERC2 competition dataset (in `data/erc2_set/`) with all competition questions and reports
+- **Git**: 确保您的系统已安装 Git。
+- **Python**: 推荐使用 Python 3.10 或更高版本。
 
-Each dataset directory contains its own README with specific setup instructions and available files. You can use either dataset to:
+### 2. 克隆项目
 
-- Study example questions, reports, and system outputs
-- Run the pipeline from scratch using provided PDFs
-- Use pre-processed data to skip directly to specific pipeline stages
-
-See the respective README files for detailed dataset contents and setup instructions:
-- `data/test_set/README.md` - For the small test dataset
-- `data/erc2_set/README.md` - For the full competition dataset
-
-## Usage
-
-You can run any part of pipeline by uncommenting the method you want to run in `src/pipeline.py` and executing:
 ```bash
-python .\src\pipeline.py
+git clone <your-repository-url>
+cd RAG_System
 ```
 
-You can also run any pipeline stage using `main.py`, but you need to run it from the directory containing your data:
+### 3. 创建并激活虚拟环境
+
+为了保持项目依赖的隔离，强烈建议使用虚拟环境。
+
 ```bash
-cd .\data\test_set\
-python ..\..\main.py process-questions --config max_nst_o3m
+# 创建虚拟环境
+python -m venv env
+
+# 激活虚拟环境
+# Windows
+.\env\Scripts\activate
+# macOS / Linux
+source env/bin/activate
 ```
 
-### CLI Commands
+### 4. 安装依赖
 
-Get help on available commands:
 ```bash
-python main.py --help
+pip install -r requirements.txt
 ```
 
-Available commands:
-- `download-models` - Download required docling models
-- `parse-pdfs` - Parse PDF reports with parallel processing options
-- `serialize-tables` - Process tables in parsed reports
-- `process-reports` - Run the full pipeline on parsed reports
-- `process-questions` - Process questions using specified config
+### 5. 配置API Key
 
-Each command has its own options. For example:
+本项目需要使用大型语言模型API（如阿里云通义千问）。
+
+1.  复制配置模板文件：
+    ```bash
+    # Windows
+    copy .env.example .env
+    # macOS / Linux
+    cp .env.example .env
+    ```
+
+2.  编辑 `.env` 文件，填入您的API Key：
+    ```
+    # 访问 https://dashscope.console.aliyun.com/apiKey 获取
+    DASHSCOPE_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ```
+
+## 📖 使用指南
+
+### 1. 准备数据
+
+将您需要处理的所有PDF文件放入 `data/stock_data/pdf_reports/` 目录下。
+
+### 2. 处理数据（创建知识库）
+
+运行以下命令，对PDF进行解析、分块和向量化，构建知识库。
+
 ```bash
-python main.py parse-pdfs --help
-# Shows options like --parallel/--sequential, --chunk-size, --max-workers
+python main.py process-reports
+```
+该命令会执行完整的ETL（提取、转换、加载）流程，处理完成后，向量数据库会保存在 `data/stock_data/databases/` 目录下。
 
-python main.py process-reports --config ser_tab
-# Process reports with serialized tables config
+> **注意**: 每次新增或删除PDF文件后，都需要重新运行此命令来更新知识库。
+
+### 3. 启动问答Web界面
+
+```bash
+streamlit run app_streamlit.py
 ```
 
-## Some configs
+命令执行成功后，浏览器会自动打开一个本地网址（通常是 `http://localhost:8501`），您现在可以开始向您的知识库提问了！
 
-- `max_nst_o3m` - Best performing config using OpenAI's o3-mini model
-- `ibm_llama70b` - Alternative using IBM's Llama 70B model
-- `gemini_thinking` - Full context answering with using enormous context window of Gemini. It is not RAG, actually
+## 📁 目录结构
 
-Check `pipeline.py` for more configs and detils on them.
+```
+RAG_System/
+├── data/
+│   └── stock_data/
+│       ├── pdf_reports/     # 存放原始PDF文件
+│       ├── databases/         # 存放生成的向量数据库
+│       └── questions.json     # 预设问题文件
+├── src/                     # 核心源代码目录
+│   ├── pipeline.py          # 数据处理和问答的核心流程编排
+│   ├── ingestion.py         # 数据向量化与索引构建
+│   ├── retrieval.py         # 检索模块
+│   ├── reranking.py         # Rerank模块
+│   ├── pdf_parsing.py       # PDF解析逻辑
+│   ├── text_splitter.py     # 文本分块逻辑
+│   └── ...                  # 其他辅助模块
+├── app_streamlit.py         # Streamlit Web应用主文件
+├── main.py                  # 命令行接口，用于数据处理
+├── requirements.txt         # Python依赖列表
+├── .env.example             # 环境变量配置模板
+└── README.md                # 项目说明文档
+```
 
-## License
+## ☁️ 部署到服务器
 
-MIT
+若要将此应用部署到云服务器，请参考以下概要步骤：
+1.  **准备云服务器** (如阿里云ECS)，并配置好安全组（开放22, 80, 443端口）。
+2.  **配置域名解析**，将您的域名指向服务器公网IP。
+3.  在服务器上**部署运行环境**，包括Python、Git等，并拉取项目代码。
+4.  使用 **Nginx** 作为反向代理，将来自80端口的HTTP请求转发到Streamlit应用（通常运行在8501端口）。
+5.  使用 **`systemd`** 或其他进程管理工具（如`supervisor`, `pm2`）将Streamlit应用作为后台服务持久化运行。
+6.  **(推荐)** 使用 **Certbot** 为您的域名配置免费的HTTPS证书，实现安全访问。
+
+## 📜 开源许可
+
+本项目采用 [MIT License](LICENSE) 开源许可。
