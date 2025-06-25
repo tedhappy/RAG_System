@@ -156,6 +156,17 @@ class QuestionsProcessor:
             print(f"[计时] [get_answer_for_company] 检索耗时: {t3-t2:.2f} 秒")
         if not retrieval_results:
             raise ValueError("No relevant context found")
+
+        # 提前将源数据块存入结果，以便返回给前端
+        source_chunks = [
+            {
+                "document_name": res.get("document_name", "未知文档"),
+                "page": res.get("page", "N/A"),
+                "text": res.get("text", "")
+            }
+            for res in retrieval_results
+        ]
+            
         t4 = time.time()
         rag_context = self._format_retrieval_results(retrieval_results)
         t5 = time.time()
@@ -168,6 +179,10 @@ class QuestionsProcessor:
         )
         t6 = time.time()
         print(f"[计时] [get_answer_for_company] LLM调用耗时: {t6-t5:.2f} 秒")
+        
+        # 将源数据块添加到最终答案字典中
+        answer_dict["source_chunks"] = source_chunks
+
         self.response_data = self.openai_processor.response_data
         if self.new_challenge_pipeline:
             pages = answer_dict.get("relevant_pages", [])
@@ -460,7 +475,7 @@ class QuestionsProcessor:
                 with open(output_file, 'w', encoding='utf-8') as file:
                     json.dump(submission, file, ensure_ascii=False, indent=2)
 
-    def process_all_questions(self, output_path: str = 'questions_with_answers.json', submission_file: bool = False, pipeline_details: str = ""):
+    def process_all_questions(self, output_path: str = 'questions_with_answers.json', submission_file: bool = False, pipeline_details: str = "") -> dict:
         result = self.process_questions_list(
             self.questions,
             output_path,

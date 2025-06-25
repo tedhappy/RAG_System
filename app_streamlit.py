@@ -141,15 +141,47 @@ with col2:
                         final_text += char
                         final_placeholder.markdown(final_text)
                         time.sleep(0.05)
-                # 引用页码流式输出（逐字）
-                if pages:
-                    pages_placeholder = st.empty()
-                    pages_text = f"**【引用页码】**{pages}"
-                    display = ""
-                    for char in pages_text:
-                        display += char
-                        pages_placeholder.markdown(display)
-                        time.sleep(0.05)
+
+                # 来源信息处理与展示
+                source_chunks = answer.get("source_chunks")
+
+                # 引用来源展示
+                if source_chunks:
+                    sources_placeholder = st.empty()
+                    # 按文档名聚合页码
+                    doc_pages = {}
+                    for chunk in source_chunks:
+                        doc_name = chunk.get('document_name', '未知文档').replace('.json', '.pdf')
+                        page_num = chunk.get('page')
+                        if page_num is not None:
+                            if doc_name not in doc_pages:
+                                doc_pages[doc_name] = set()
+                            doc_pages[doc_name].add(page_num)
+                    
+                    # 构建引用来源文本
+                    sources_text_parts = []
+                    for doc_name, page_set in doc_pages.items():
+                        sorted_pages = sorted(list(page_set))
+                        sources_text_parts.append(f"《{doc_name}》: {sorted_pages}")
+                    
+                    if sources_text_parts:
+                        full_sources_text = f"**【引用来源】** " + ", ".join(sources_text_parts)
+                        display_text = ""
+                        for char in full_sources_text:
+                            display_text += char
+                            sources_placeholder.markdown(display_text)
+                            time.sleep(0.05)
+                
+                # 详细来源信息
+                if source_chunks:
+                    st.markdown("---") # 添加分割线
+                    st.markdown("#### 来源信息")
+                    for i, chunk in enumerate(source_chunks):
+                        doc_name = chunk.get('document_name', '未知文档').replace('.json', '.pdf')
+                        page_num = chunk.get('page', 'N/A')
+                        with st.expander(f"来源 {i+1}: {doc_name} (页码: {page_num})"):
+                            st.text(chunk.get('text', ''))
+
             except Exception as e:
                 st.error(f"发生错误：{e}")
     else:

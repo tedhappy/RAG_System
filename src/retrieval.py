@@ -217,15 +217,23 @@ class VectorRetriever:
         faiss_path = self.vector_db_dir / f"{sha1}.faiss"
         if not faiss_path.exists():
             raise ValueError(f"No vector DB found for '{company_name}' (sha1: {sha1})")
+        
         document = target_report["document"]
         vector_db = target_report["vector_db"]
         chunks = document["content"]["chunks"]
         pages = document["content"].get("pages", [])
+        
         actual_top_n = min(top_n, len(chunks))
+        
         # 获取 query 的 embedding，支持 openai/dashscope
         embedding = self._get_embedding(query)
         embedding_array = np.array(embedding, dtype=np.float32).reshape(1, -1)
+        
         distances, indices = vector_db.search(x=embedding_array, k=actual_top_n)
+        
+        # 从文档元信息中获取文件名
+        document_name = document.get("metainfo", {}).get("file_name", "未知文档")
+
         retrieval_results = []
         seen_pages = set()
         for distance, index in zip(distances[0], indices[0]):
@@ -234,22 +242,35 @@ class VectorRetriever:
             parent_page = None
             if pages:
                 parent_page = next((page for page in pages if page["page"] == chunk.get("page")), None)
+            
             if return_parent_pages and parent_page:
                 if parent_page["page"] not in seen_pages:
                     seen_pages.add(parent_page["page"])
                     result = {
                         "distance": distance,
                         "page": parent_page["page"],
-                        "text": parent_page["text"]
+                        "text": parent_page["text"],
+                        "document_name": document_name
                     }
                     retrieval_results.append(result)
             else:
                 result = {
                     "distance": distance,
                     "page": chunk.get("page", 0),
-                    "text": chunk["text"]
+                    "text": chunk["text"],
+                    "document_name": document_name
                 }
                 retrieval_results.append(result)
+        
+        # LLM Reranking (if enabled)
+        if llm_reranking_sample_size is not None and llm_reranking_sample_size > 0:
+            reranker = LLMReranker(provider=self.embedding_provider)
+            retrieval_results = reranker.rerank_documents(
+                query=query,
+                documents=retrieval_results,
+                documents_batch_size=llm_reranking_sample_size
+            )
+        
         return retrieval_results
 
     def retrieve_all(self, company_name: str) -> List[Dict]:
