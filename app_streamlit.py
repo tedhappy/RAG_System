@@ -152,17 +152,17 @@ with col2:
                     doc_pages = {}
                     for chunk in source_chunks:
                         doc_name = chunk.get('document_name', '未知文档').replace('.json', '.pdf')
-                        page_num = chunk.get('page')
-                        if page_num is not None:
+                        line_num = chunk.get('line_from')
+                        if line_num is not None:
                             if doc_name not in doc_pages:
                                 doc_pages[doc_name] = set()
-                            doc_pages[doc_name].add(page_num)
+                            doc_pages[doc_name].add(line_num)
                     
                     # 构建引用来源文本
                     sources_text_parts = []
-                    for doc_name, page_set in doc_pages.items():
-                        sorted_pages = sorted(list(page_set))
-                        sources_text_parts.append(f"《{doc_name}》: {sorted_pages}")
+                    for doc_name, line_set in doc_pages.items():
+                        sorted_lines = sorted(list(line_set))
+                        sources_text_parts.append(f"《{doc_name}》 (行: {sorted_lines})")
                     
                     if sources_text_parts:
                         full_sources_text = f"**【引用来源】** " + ", ".join(sources_text_parts)
@@ -178,8 +178,8 @@ with col2:
                     st.markdown("#### 来源信息")
                     for i, chunk in enumerate(source_chunks[:3]): # 只取前3个
                         doc_name = chunk.get('document_name', '未知文档').replace('.json', '.pdf')
-                        page_num = chunk.get('page', 'N/A')
-                        with st.expander(f"来源 {i+1}: {doc_name} (页码: {page_num})"):
+                        line_num = chunk.get('line_from', 'N/A')
+                        with st.expander(f"来源 {i+1}: {doc_name} (行号: {line_num})"):
                             st.text(chunk.get('text', ''))
 
             except Exception as e:

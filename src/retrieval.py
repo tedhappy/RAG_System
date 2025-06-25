@@ -65,14 +65,16 @@ class BM25Retriever:
                     result = {
                         "distance": score,
                         "page": parent_page["page"],
-                        "text": parent_page["text"]
+                        "text": parent_page["text"],
+                        "line_from": chunk.get("lines", [0])[0]
                     }
                     retrieval_results.append(result)
             else:
                 result = {
                     "distance": score,
                     "page": chunk["page"],
-                    "text": chunk["text"]
+                    "text": chunk["text"],
+                    "line_from": chunk.get("lines", [0])[0]
                 }
                 retrieval_results.append(result)
         
@@ -250,7 +252,8 @@ class VectorRetriever:
                         "distance": distance,
                         "page": parent_page["page"],
                         "text": parent_page["text"],
-                        "document_name": document_name
+                        "document_name": document_name,
+                        "line_from": chunk.get("lines", [0])[0]
                     }
                     retrieval_results.append(result)
             else:
@@ -258,7 +261,8 @@ class VectorRetriever:
                     "distance": distance,
                     "page": chunk.get("page", 0),
                     "text": chunk["text"],
-                    "document_name": document_name
+                    "document_name": document_name,
+                    "line_from": chunk.get("lines", [0])[0]
                 }
                 retrieval_results.append(result)
         

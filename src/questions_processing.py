@@ -162,7 +162,8 @@ class QuestionsProcessor:
             {
                 "document_name": res.get("document_name", "未知文档"),
                 "page": res.get("page", "N/A"),
-                "text": res.get("text", "")
+                "text": res.get("text", ""),
+                "line_from": res.get("line_from", "N/A")
             }
             for res in retrieval_results
         ]
