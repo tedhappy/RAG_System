@@ -176,7 +176,7 @@ with col2:
                 if source_chunks:
                     st.markdown("---") # 添加分割线
                     st.markdown("#### 来源信息")
-                    for i, chunk in enumerate(source_chunks):
+                    for i, chunk in enumerate(source_chunks[:3]): # 只取前3个
                         doc_name = chunk.get('document_name', '未知文档').replace('.json', '.pdf')
                         page_num = chunk.get('page', 'N/A')
                         with st.expander(f"来源 {i+1}: {doc_name} (页码: {page_num})"):
