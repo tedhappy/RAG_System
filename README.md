@@ -113,7 +113,7 @@ pip install -r requirements.txt
 运行以下命令，对PDF进行解析、分块和向量化，构建知识库。
 
 ```bash
-python main.py process-reports
+python -m src.pipeline
 ```
 该命令会执行完整的ETL（提取、转换、加载）流程，处理完成后，向量数据库会保存在 `data/stock_data/databases/` 目录下。
 
