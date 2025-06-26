@@ -1,6 +1,0 @@
-# 阿里通义千问 API Key
-# 访问 https://dashscope.console.aliyun.com/apiKey 获取
-DASHSCOPE_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-# 如果你使用其他模型的 API，可以在这里添加，例如：
-# OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
